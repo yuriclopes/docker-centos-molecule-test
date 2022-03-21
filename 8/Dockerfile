@@ -1,9 +1,9 @@
-FROM centos:centos8
+FROM quay.io/centos/centos:stream8
 LABEL maintainer="Yuri Corona Lopes"
 
 RUN yum update -y && \
     yum upgrade -y && \
-    yum install -y systemd systemd-cron python3 python3-pip sudo bash ca-certificates && \
+    yum install -y systemd python3 python3-pip sudo bash ca-certificates && \
     rm -Rf /usr/share/doc && \
     rm -Rf /usr/share/man && \
     yum clean all
