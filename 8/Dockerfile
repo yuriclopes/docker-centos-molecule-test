@@ -1,8 +1,6 @@
 FROM centos:centos8
 LABEL maintainer="Yuri Corona Lopes"
 
-ARG DEBIAN_FRONTEND=noninteractive
-
 RUN yum update -y && \
     yum upgrade -y && \
     yum install -y systemd systemd-cron python3 python3-pip sudo bash ca-certificates && \
