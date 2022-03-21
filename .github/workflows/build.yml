@@ -1,0 +1,108 @@
+---
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/README.md'
+      - '**/LICENSE'
+  schedule:
+    - cron: "0 0 * * 3"
+
+jobs:
+  test_centos_7:
+    name: Test Centos 7 Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: "[TEST] Build Centos 7 Image"
+        run: docker build -t test-centos-7 -f 7/Dockerfile .
+
+      - name: "[TEST] Run Centos 7 Image"
+        run: docker run --name test-centos-7 -d --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro test-centos-7
+
+      - name: "[TEST] Verify Centos 7 Image"
+        run: docker exec --tty test-centos-7 env TERM=xterm systemctl status
+      
+      # - uses: azure/container-scan@v0
+      #   with:
+      #     image-name: test-centos-7
+      #     severity-threshold: MEDIUM
+
+  test_centos_8:
+    name: Test Centos 8 Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: "[TEST] Build Centos 8 Image"
+        run: docker build -t test-centos-8 -f 8/Dockerfile .
+
+      - name: "[TEST] Run Centos 8 Image"
+        run: docker run --name test-centos-8 -d --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro test-centos-8
+
+      - name: "[TEST] Verify Centos 8 Image"
+        run: docker exec --tty test-centos-8 env TERM=xterm systemctl status
+      
+      # - uses: azure/container-scan@v0
+      #   with:
+      #     image-name: test-centos-8
+      #     severity-threshold: MEDIUM
+
+  release_centos_7:
+    name: Release Centos 7
+    runs-on: ubuntu-latest
+    needs: test_centos_7
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image.
+        uses: docker/build-push-action@v2
+        with:
+          context: ./7
+          file: ./7/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: yuriclopes/centos-molecule-test:7
+
+  release_centos_8:
+    name: Release Centos 8
+    runs-on: ubuntu-latest
+    needs: test_centos_8
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image.
+        uses: docker/build-push-action@v2
+        with:
+          context: ./8
+          file: ./8/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: yuriclopes/centos-molecule-test:8
