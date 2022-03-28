@@ -3,7 +3,7 @@ LABEL maintainer="Yuri Corona Lopes"
 
 RUN yum update -y && \
     yum upgrade -y && \
-    yum install -y systemd python3 python3-pip sudo bash ca-certificates iproute glibc-langpack-en && \
+    yum install -y systemd python3 sudo bash ca-certificates iproute glibc-langpack-en && \
     rm -Rf /usr/share/doc && \
     rm -Rf /usr/share/man && \
     yum clean all
